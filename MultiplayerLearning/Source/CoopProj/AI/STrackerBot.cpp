@@ -10,6 +10,7 @@
 #include "Components/SHealthComponent.h"
 #include "Components/SphereComponent.h"
 #include "Player/SCharacter.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -38,7 +39,10 @@ void ASTrackerBot::BeginPlay()
 {
 	Super::BeginPlay();
 
-	NextPathPoint = GetNextPathPoint();
+	if (Role == ROLE_Authority)
+	{
+		NextPathPoint = GetNextPathPoint();
+	}
 
 	MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
 
@@ -83,24 +87,41 @@ void ASTrackerBot::SelfDestruct()
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorTransform());
 	}
+	UGameplayStatics::SpawnSoundAttached(ExplosionSound, RootComponent);
 
-	TArray<AActor*> IgnoredActors;
-	IgnoredActors.Add(this);
+	MeshComp->SetVisibility(false);
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+	if (Role == ROLE_Authority)
+	{
+		TArray<AActor*> IgnoredActors;
+		IgnoredActors.Add(this);
 
-	Destroy();
+		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+
+		SetLifeSpan(2);
+	}
 }
 
 void ASTrackerBot::SelfDamage()
 {
-	UGameplayStatics::ApplyDamage(this, 20, GetInstigatorController(), this, nullptr);
+	if (!bExploded)
+	{
+		UGameplayStatics::ApplyDamage(this, 20, GetInstigatorController(), this, nullptr);
+	}
 }
 
 // Called every frame
 void ASTrackerBot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (Role != ROLE_Authority)
+		return;
+
+	if (bExploded)
+		return;
 
 	FVector ForceDirection;
 	if (NextPathPoint.Size() > StopDistance) {
@@ -145,8 +166,14 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 
-	if (PlayerPawn && !GetWorldTimerManager().IsTimerActive(SelfDamage_TH))
+	if (PlayerPawn && !GetWorldTimerManager().IsTimerActive(SelfDamage_TH) && !bExploded)
 	{
-		GetWorldTimerManager().SetTimer(SelfDamage_TH, this, &ASTrackerBot::SelfDamage, 0.5, true, 0);
+
+		if (Role == ROLE_Authority)
+		{
+			GetWorldTimerManager().SetTimer(SelfDamage_TH, this, &ASTrackerBot::SelfDamage, SelfDamageInterval, true, 0);
+		}
+
+		UGameplayStatics::SpawnSoundAttached(SelfDestructionSound, RootComponent);
 	}
 }

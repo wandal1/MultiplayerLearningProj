@@ -29,6 +29,11 @@ void USHealthComponent::BeginPlay()
 }
 
 
+void USHealthComponent::OnRep_Health(float Oldhealth)
+{
+	OnHealthChanged.Broadcast(this, CurrentHealth, Oldhealth - CurrentHealth, nullptr, nullptr, nullptr);
+}
+
 void USHealthComponent::HandleAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Damage <= 0)

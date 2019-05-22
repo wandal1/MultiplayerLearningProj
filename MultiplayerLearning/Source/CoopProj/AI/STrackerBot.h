@@ -42,6 +42,13 @@ protected:
 		class UParticleSystem* ExplosionEffect;
 	UPROPERTY(EditDefaultsOnly)
 		bool bUseVelocityChange = false;
+	UPROPERTY(EditDefaultsOnly)
+		class USoundCue* ExplosionSound;
+	UPROPERTY(EditDefaultsOnly)
+		class USoundCue* SelfDestructionSound;
+	UPROPERTY(EditDefaultsOnly)
+		float SelfDamageInterval = 0.25;
+	
 
 	UPROPERTY()
 		FVector NextPathPoint;
