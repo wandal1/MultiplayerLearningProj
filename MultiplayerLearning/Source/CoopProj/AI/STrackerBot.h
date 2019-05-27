@@ -37,7 +37,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 		float ExplosionDamage = 100.0F;
 	UPROPERTY(EditDefaultsOnly)
+		float BotsNearMultiplier = 10.0F;
+	UPROPERTY(EditDefaultsOnly)
 		float ExplosionRadius = 200.0F;
+	UPROPERTY(EditDefaultsOnly)
+		float SearchRadius = 300.0F;
 	UPROPERTY(EditDefaultsOnly)
 		class UParticleSystem* ExplosionEffect;
 	UPROPERTY(EditDefaultsOnly)
@@ -48,14 +52,15 @@ protected:
 		class USoundCue* SelfDestructionSound;
 	UPROPERTY(EditDefaultsOnly)
 		float SelfDamageInterval = 0.25;
-	
 
 	UPROPERTY()
 		FVector NextPathPoint;
 	bool bExploded = false;
+	int BotsNear = 0;
 
 	UMaterialInstanceDynamic* MatInst;
 	FTimerHandle SelfDamage_TH;
+	FTimerHandle Search_TH;
 
 	UFUNCTION()
 		void TakeDamageHandle(class USHealthComponent* NewHealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -63,6 +68,8 @@ protected:
 	FVector GetNextPathPoint();
 	void SelfDestruct();
 	void SelfDamage();
+
+	void TryFindBotsNear();
 
 public:
 	// Called every frame

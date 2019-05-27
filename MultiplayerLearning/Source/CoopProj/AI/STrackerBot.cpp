@@ -11,6 +11,7 @@
 #include "Components/SphereComponent.h"
 #include "Player/SCharacter.h"
 #include "Sound/SoundCue.h"
+#include "Engine/EngineTypes.h"
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -46,10 +47,11 @@ void ASTrackerBot::BeginPlay()
 
 	MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
 
-	//OnActorBeginOverlap.AddDynamic(this, &ASTrackerBot::PlayerOverlaped);
+	GetWorldTimerManager().SetTimer(Search_TH, this, &ASTrackerBot::TryFindBotsNear, 1, true, 0);
+
 }
 
-void ASTrackerBot::TakeDamageHandle(class USHealthComponent* HealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASTrackerBot::TakeDamageHandle(class USHealthComponent* OtherHealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (MatInst)
 	{
@@ -98,7 +100,7 @@ void ASTrackerBot::SelfDestruct()
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
 
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage + (BotsNear * BotsNearMultiplier), GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
 		SetLifeSpan(2);
 	}
@@ -109,6 +111,27 @@ void ASTrackerBot::SelfDamage()
 	if (!bExploded)
 	{
 		UGameplayStatics::ApplyDamage(this, 20, GetInstigatorController(), this, nullptr);
+	}
+}
+
+void ASTrackerBot::TryFindBotsNear()
+{
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery2);
+	TArray<AActor*> ActorToIgnore;
+	ActorToIgnore.Add(this);
+	TArray<AActor*> OuterActors;
+
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetActorLocation(), SearchRadius, ObjectTypes, ASTrackerBot::StaticClass(), ActorToIgnore, OuterActors);
+
+	BotsNear = OuterActors.Num();
+
+	if (BotsNear > 0)
+	{
+		if (MatInst)
+		{
+			MatInst->SetScalarParameterValue("BotsNear", GetWorld()->TimeSeconds);
+		}
 	}
 }
 
@@ -146,7 +169,7 @@ void ASTrackerBot::Tick(float DeltaTime)
 		if (GetVelocity().Size() <= StopVelocity) {
 			ForceDirection = -GetVelocity();
 			ForceDirection.Normalize();
-			MeshComp->AddForce(ForceDirection* MovementForce, NAME_None, true);
+			MeshComp->AddForce(ForceDirection * MovementForce, NAME_None, true);
 		}
 	}
 
