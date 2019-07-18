@@ -24,7 +24,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 		class UDecalComponent* DecalComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "PowerUp")
+	UPROPERTY(EditAnywhere, Category = "PowerUp")
 		TSubclassOf<class APowerUpActor> PowerUpClass;
 	UPROPERTY(EditDefaultsOnly, Category = "PowerUp")
 		float Cooldown = 1;

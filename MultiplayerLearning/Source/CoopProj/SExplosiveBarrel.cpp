@@ -33,7 +33,7 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	SetReplicateMovement(true);
 }
 
-void ASExplosiveBarrel::OnHealthCahnged(class USHealthComponent* HealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASExplosiveBarrel::OnHealthCahnged(class USHealthComponent* HealthComp_Local, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (bExploded)
 	{

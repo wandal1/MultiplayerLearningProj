@@ -168,7 +168,7 @@ void ASCharacter::SpawnAndAttachWeapon()
 	}
 }
 
-void ASCharacter::OnHealthCahnged(USHealthComponent* HealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASCharacter::OnHealthCahnged(USHealthComponent* HealthComp_Local, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0 && bIsAlive)
 	{

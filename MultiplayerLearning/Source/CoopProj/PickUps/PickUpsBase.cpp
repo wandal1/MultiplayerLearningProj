@@ -17,17 +17,21 @@ APickUpsBase::APickUpsBase()
 	DecalComp = CreateDefaultSubobject<UDecalComponent>(TEXT("DecalComponent"));
 	DecalComp->SetupAttachment(RootComponent);
 
-	DecalComp->SetRelativeRotation(FRotator(90, 0 ,0));
+	DecalComp->SetRelativeRotation(FRotator(90, 0, 0));
 	DecalComp->DecalSize = FVector(64, 75, 75);
 
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
 void APickUpsBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	Respawn();
+
+	if (Role == ROLE_Authority)
+	{
+		Respawn();
+	}
 }
 
 void APickUpsBase::Respawn()
@@ -47,14 +51,13 @@ void APickUpsBase::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	if (SpawnedPowerUp)
+	if (SpawnedPowerUp && Role == ROLE_Authority)
 	{
-		SpawnedPowerUp->ActivatePowerUp();
+		SpawnedPowerUp->ActivatePowerUp(OtherActor);
 
 		GetWorldTimerManager().SetTimer(Cooldomwn_TH, this, &APickUpsBase::Respawn, Cooldown + SpawnedPowerUp->PowerUpsInterval);
-		
-		SpawnedPowerUp = nullptr;
 
+		SpawnedPowerUp = nullptr;
 	}
 }
 

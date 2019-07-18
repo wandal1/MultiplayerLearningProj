@@ -3,6 +3,7 @@
 #include "SHealthComponent.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
+#include "UnrealMathUtility.h"
 
 // Sets default values for this component's properties
 USHealthComponent::USHealthComponent()
@@ -36,16 +37,45 @@ void USHealthComponent::OnRep_Health(float Oldhealth)
 
 void USHealthComponent::HandleAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0)
+	if (Damage <= 0 || !IsAlive())
 	{
 		return;
 	}
 
 	CurrentHealth = FMath::Max<float>(CurrentHealth - Damage, 0);
 
+	if (CurrentHealth <= 0)
+	{
+		bIsAlive = false;
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("Current Health : %s"), *FString::SanitizeFloat(CurrentHealth));
 
 	OnHealthChanged.Broadcast(this, CurrentHealth, Damage, DamageType, InstigatedBy, DamageCauser);
+}
+
+bool USHealthComponent::IsAlive() const
+{
+	return bIsAlive;
+}
+
+float USHealthComponent::GetHealth() const
+{
+	return CurrentHealth;
+}
+
+void USHealthComponent::Heal(float HealthAmount)
+{
+	if (HealthAmount <= 0 || CurrentHealth <= 0)
+	{
+		return;
+	}
+
+	CurrentHealth = FMath::Clamp<float>(CurrentHealth + HealthAmount, 0, MaxHealth);
+
+	UE_LOG(LogTemp, Log, TEXT("Health Amount : %s"), *FString::SanitizeFloat(HealthAmount));
+
+	OnHealthChanged.Broadcast(this, CurrentHealth, -HealthAmount, nullptr, nullptr, nullptr);
 }
 
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

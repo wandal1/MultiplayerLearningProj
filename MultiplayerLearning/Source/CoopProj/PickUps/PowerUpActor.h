@@ -30,15 +30,23 @@ protected:
 	UFUNCTION()
 		void PowerUpTick();
 
+	UPROPERTY(ReplicatedUsing = OnRep_PowerupActive)
+		bool bIsPowerupActive;
+
+	UFUNCTION()
+		void OnRep_PowerupActive();
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnPowerUpStateChanged(bool IsActive);
 public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "PowerUps")
 		float PowerUpsInterval = 0;
 
-	void ActivatePowerUp();
+	void ActivatePowerUp(AActor* OtherActor);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "PowerUps")
-		void OnActivated();
+		void OnActivated(AActor* Actor);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "PowerUps")
 		void OnPowerUpTicked();

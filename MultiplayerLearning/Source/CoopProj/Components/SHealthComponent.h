@@ -30,10 +30,22 @@ protected:
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 		float MaxHealth = 100;
 
+	bool bIsAlive = true;
+
 	UFUNCTION()
 		void HandleAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:
+
+	UFUNCTION(BlueprintCallable)
+	bool IsAlive() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetHealth() const;
+
 	UPROPERTY(BlueprintAssignable)
 		FOnHealthChangedSignature OnHealthChanged;
+
+	UFUNCTION(BlueprintCallable)
+		void Heal(float HealtAmount);
 };
