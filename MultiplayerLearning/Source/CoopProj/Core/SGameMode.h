@@ -6,9 +6,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "SGameMode.generated.h"
 
-/**
- * 
- */
+enum class EWaveState : uint8;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController);
+
 UCLASS()
 class COOPPROJ_API ASGameMode : public AGameModeBase
 {
@@ -32,6 +33,14 @@ protected:
 
 	void CheckWaveState();
 
+	void CheckAnyPlayerAlive();
+
+	void RestartDeadPlayer();
+
+	void GameOver();
+
+	void SetWaveState(EWaveState NewState);
+
 	FTimerHandle BotSpawner_TH;
 	FTimerHandle StartNextWave_TH;
 
@@ -44,6 +53,11 @@ protected:
 
 	int CurrentWave = 0;
 public:
+	bool TryResurectDeadPlayers();
+
 	virtual void StartPlay() override;
+
+	UPROPERTY(BlueprintAssignable)
+		FOnActorKilled OnActorKilled;
 
 };

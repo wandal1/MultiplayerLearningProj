@@ -5,9 +5,14 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "Components/SHealthComponent.h"
+#include "SGameState.h"
+#include "SPlayerState.h"
 
 ASGameMode::ASGameMode()
 {
+	GameStateClass = ASGameState::StaticClass();
+	PlayerStateClass = ASPlayerState::StaticClass();
+
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1;
 }
@@ -17,6 +22,8 @@ void ASGameMode::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	CheckWaveState();
+	CheckAnyPlayerAlive();
+	//RestartDeadPlayer();
 }
 
 void ASGameMode::StartWave()
@@ -28,6 +35,8 @@ void ASGameMode::StartWave()
 	BotToSpawnThisWave = CurrentWave * 2;
 
 	GetWorldTimerManager().SetTimer(BotSpawner_TH, this, &ASGameMode::SpawnBotProcess, SpawnInterval, true, 0);
+
+	SetWaveState(EWaveState::WaveInPropgress);
 }
 
 void ASGameMode::EndWave()
@@ -35,6 +44,8 @@ void ASGameMode::EndWave()
 	UE_LOG(LogTemp, Warning, TEXT("Wave Spawn Ended"));
 
 	GetWorldTimerManager().ClearTimer(BotSpawner_TH);
+
+	SetWaveState(EWaveState::WaitingToComplete);
 }
 
 void ASGameMode::PrepareForNextWave()
@@ -42,6 +53,8 @@ void ASGameMode::PrepareForNextWave()
 	UE_LOG(LogTemp, Warning, TEXT("Wave Spawn Preparation"));
 
 	GetWorldTimerManager().SetTimer(StartNextWave_TH, this, &ASGameMode::StartWave, TimeBetweenWaves, false);
+
+	SetWaveState(EWaveState::WaitingToStart);
 }
 
 void ASGameMode::SpawnBotProcess()
@@ -88,9 +101,69 @@ void ASGameMode::CheckWaveState()
 	if (!bIsAnyBotAlive)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No Bots Left Alive"));
+
+		SetWaveState(EWaveState::WaveComplete);
 		PrepareForNextWave();
 	}
 
+}
+
+void ASGameMode::CheckAnyPlayerAlive()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn())
+		{
+			APawn* MyPawn = PC->GetPawn();
+			USHealthComponent* HealthComp = Cast<USHealthComponent>(MyPawn->GetComponentByClass(USHealthComponent::StaticClass()));
+
+			if (ensure(HealthComp) && HealthComp->IsAlive())
+			{
+				return;
+			}
+		}
+	}
+	//If any player alive
+	GameOver();
+}
+
+void ASGameMode::RestartDeadPlayer()
+{
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC && !PC->GetPawn())
+		{
+			//RestartPlayer(PC);
+		}
+	}
+}
+
+void ASGameMode::GameOver()
+{
+	EndWave();
+
+	UE_LOG(LogTemp, Error, TEXT("Game Over!! Player is Dead"));
+
+	SetWaveState(EWaveState::GameOver);
+}
+
+void ASGameMode::SetWaveState(EWaveState NewState)
+{
+	static ASGameState* GS = GetGameState<ASGameState>();
+
+	if (ensureAlways(GS))
+	{
+		GS->SetWaveState(NewState);
+	}
+}
+
+bool ASGameMode::TryResurectDeadPlayers()
+{
+	RestartDeadPlayer();
+	return true;
 }
 
 void ASGameMode::StartPlay()

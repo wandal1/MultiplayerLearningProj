@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 #include "UnrealMathUtility.h"
+#include "Core/SGameMode.h"
 
 // Sets default values for this component's properties
 USHealthComponent::USHealthComponent()
@@ -47,6 +48,11 @@ void USHealthComponent::HandleAnyDamage(AActor* DamagedActor, float Damage, cons
 	if (CurrentHealth <= 0)
 	{
 		bIsAlive = false;
+		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+		}
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Current Health : %s"), *FString::SanitizeFloat(CurrentHealth));
