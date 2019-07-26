@@ -43,7 +43,8 @@ protected:
 
 	FTimerHandle BotSpawner_TH;
 	FTimerHandle StartNextWave_TH;
-
+	UPROPERTY(EditDefaultsOnly)
+		bool bAutoSpawn = true;
 	UPROPERTY(EditDefaultsOnly)
 		float SpawnInterval = 2;
 	UPROPERTY(EditDefaultsOnly)

@@ -43,8 +43,8 @@ protected:
 
 	void SpawnAndAttachWeapon();
 
-	UFUNCTION()
-		void OnHealthCahnged(class USHealthComponent* HealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	UFUNCTION(NetMulticast, Reliable)
+		void OnHealthCahnged(class USHealthComponent* NewHealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 		class UCameraComponent* CameraComponent;

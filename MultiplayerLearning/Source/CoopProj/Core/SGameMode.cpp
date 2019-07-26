@@ -14,6 +14,7 @@ ASGameMode::ASGameMode()
 	PlayerStateClass = ASPlayerState::StaticClass();
 
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 	PrimaryActorTick.TickInterval = 1;
 }
 
@@ -136,7 +137,7 @@ void ASGameMode::RestartDeadPlayer()
 		APlayerController* PC = It->Get();
 		if (PC && !PC->GetPawn())
 		{
-			//RestartPlayer(PC);
+			RestartPlayer(PC);
 		}
 	}
 }
@@ -148,13 +149,16 @@ void ASGameMode::GameOver()
 	UE_LOG(LogTemp, Error, TEXT("Game Over!! Player is Dead"));
 
 	SetWaveState(EWaveState::GameOver);
+
+	SetActorTickEnabled(false);
 }
 
 void ASGameMode::SetWaveState(EWaveState NewState)
 {
 	static ASGameState* GS = GetGameState<ASGameState>();
 
-	if (ensureAlways(GS))
+	//if (ensureAlways(GS))
+	if (GS->IsValidLowLevel())
 	{
 		GS->SetWaveState(NewState);
 	}
@@ -170,5 +174,11 @@ void ASGameMode::StartPlay()
 {
 	Super::StartPlay();
 
-	PrepareForNextWave();
+	if (bAutoSpawn)
+	{
+		FTimerHandle Tmp_TH;
+		GetWorldTimerManager().SetTimer(Tmp_TH, this, &ASGameMode::PrepareForNextWave, TimeBetweenWaves, false);
+
+		SetActorTickEnabled(true);
+	}
 }

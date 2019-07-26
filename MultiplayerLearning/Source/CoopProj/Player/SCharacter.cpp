@@ -9,6 +9,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "CoopProj.h"
 #include "Components/SHealthComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -32,8 +33,11 @@ ASCharacter::ASCharacter()
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
+	GetCapsuleComponent()->SetIsReplicated(true);
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthCahnged);
+
+	SetReplicates(true);
 }
 
 FVector ASCharacter::GetPawnViewLocation() const
@@ -168,14 +172,16 @@ void ASCharacter::SpawnAndAttachWeapon()
 	}
 }
 
-void ASCharacter::OnHealthCahnged(USHealthComponent* HealthComp_Local, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void ASCharacter::OnHealthCahnged_Implementation(USHealthComponent* HealthComp_Local, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0 && bIsAlive)
 	{
 		bIsAlive = false;
 
 		GetMovementComponent()->StopMovementImmediately();
+		GetCharacterMovement()->GravityScale = 0;
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
 

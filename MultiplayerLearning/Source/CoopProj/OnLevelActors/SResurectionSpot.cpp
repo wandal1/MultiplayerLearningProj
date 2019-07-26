@@ -6,6 +6,8 @@
 
 void ASResurectionSpot::TimerFinished()
 {
+	Super::TimerFinished();
+
 	ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
 
 	if (GM)

@@ -36,6 +36,8 @@ ASWeapon::ASWeapon()
 
 	NetUpdateFrequency = 66;
 	MinNetUpdateFrequency = 33;
+
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ASWeapon::Fire()

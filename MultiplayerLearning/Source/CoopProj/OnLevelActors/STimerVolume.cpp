@@ -10,12 +10,16 @@ ASTimerVolume::ASTimerVolume()
 {
 // 	PrimaryActorTick.bCanEverTick = true;
 // 	PrimaryActorTick.TickInterval = 1;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 	DecalComp = CreateDefaultSubobject<UDecalComponent>(TEXT("Decalcomponent"));
 	DecalComp->SetupAttachment(RootComponent);
 
 	DecalComp->DecalSize = Cast<UBoxComponent>(GetCollisionComponent())->GetScaledBoxExtent();
 	DecalComp->SetRelativeRotation(FRotator(90, 0, 0));
+
+	SetReplicates(true);
 }
 
 void ASTimerVolume::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -45,6 +49,14 @@ void ASTimerVolume::OnConstruction(const FTransform& Transform)
 	DecalComp->DecalSize = Cast<UBoxComponent>(GetCollisionComponent())->GetScaledBoxExtent();
 }
 
+void ASTimerVolume::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	UE_LOG(LogTemp, Warning, TEXT("Tick Timer : %s"), GetWorldTimerManager().IsTimerActive(TimerTick_TH) ? TEXT("Valid") : TEXT("Not Valid"));
+	UE_LOG(LogTemp, Warning, TEXT("Direation Timer : %s"), GetWorldTimerManager().IsTimerActive(TimerDuration_TH) ? TEXT("Valid") : TEXT("Not Valid"));
+}
+
 bool ASTimerVolume::TryStartTimer()
 {
 	if (IsTimerRuning())
@@ -63,24 +75,36 @@ bool ASTimerVolume::IsTimerRuning()
 
 void ASTimerVolume::StartTimer()
 {
-	GetWorldTimerManager().SetTimer(TimerTick_TH, this, &ASTimerVolume::TimerTick, 1, true);
-	GetWorldTimerManager().SetTimer(TimerDuration_TH, this, &ASTimerVolume::TimerFinished, TimerDuration, true);
+	if (IsTimerRuning())
+	{
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(TimerTick_TH, this, &ASTimerVolume::TimerTick, 1, true, 1);
+	GetWorldTimerManager().SetTimer(TimerDuration_TH, this, &ASTimerVolume::TimerFinished, TimerDuration, false);
 }
 
 void ASTimerVolume::TimerFinished()
 {
 	ClearTimer();
+
+	UE_LOG(LogTemp, Warning, TEXT("Timer Finished"));
 }
 
 void ASTimerVolume::TimerInterupted()
 {
 	ClearTimer();
+
+	UE_LOG(LogTemp, Warning, TEXT("Timer Interupted"));
 }
 
 void ASTimerVolume::ClearTimer()
 {
 	GetWorldTimerManager().ClearTimer(TimerTick_TH);
+
 	GetWorldTimerManager().ClearTimer(TimerDuration_TH);
+
+	UE_LOG(LogTemp, Warning, TEXT("Timers Cleared"));
 }
 
 void ASTimerVolume::BeginPlay()

@@ -24,16 +24,22 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+
+	virtual void Tick(float DeltaSeconds) override;
+
 protected:
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UDecalComponent* DecalComp;
 
 	UPROPERTY(EditAnywhere, Category = "Timer")
 		float TimerDuration = 10;
 
+	UPROPERTY()
 	FTimerHandle TimerTick_TH;
+	UPROPERTY()
 	FTimerHandle TimerDuration_TH;
+
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void TimerTick();
@@ -44,6 +50,7 @@ protected:
 
 	void StartTimer();
 
+	UFUNCTION()
 	virtual void TimerFinished();
 
 	void TimerInterupted();
@@ -51,5 +58,4 @@ protected:
 	void ClearTimer();
 
 	virtual void BeginPlay() override;
-
 };
