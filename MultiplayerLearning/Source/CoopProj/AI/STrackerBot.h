@@ -61,6 +61,7 @@ protected:
 	UMaterialInstanceDynamic* MatInst;
 	FTimerHandle SelfDamage_TH;
 	FTimerHandle Search_TH;
+	FTimerHandle RefreshPath_TH;
 
 	UFUNCTION()
 		void TakeDamageHandle(class USHealthComponent* NewHealthComp, float Health, float HealthDeltaAActor, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -69,6 +70,7 @@ protected:
 	void SelfDestruct();
 	void SelfDamage();
 
+	void RefreshPath();
 	void TryFindBotsNear();
 
 public:

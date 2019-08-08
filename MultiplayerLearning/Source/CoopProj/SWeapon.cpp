@@ -85,7 +85,7 @@ void ASWeapon::Fire()
 			float ActualDamage = BaseDamage;
 			ActualDamage *= SurfaceType == SURFACE_BODY_CRITICAL ? CriticalMultiplier : 1;
 
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, FinalHitDirection, Hit, GetOwner()->GetInstigatorController(), this, DamageType);
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, FinalHitDirection, Hit, GetOwner()->GetInstigatorController(), GetOwner(), DamageType);
 
 			TracerEndPoint = Hit.ImpactPoint;
 		}

@@ -178,6 +178,8 @@ void ASCharacter::OnHealthCahnged_Implementation(USHealthComponent* HealthComp_L
 	{
 		bIsAlive = false;
 
+		StopFire();
+
 		GetMovementComponent()->StopMovementImmediately();
 		GetCharacterMovement()->GravityScale = 0;
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

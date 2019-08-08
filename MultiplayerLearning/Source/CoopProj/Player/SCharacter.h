@@ -35,9 +35,6 @@ protected:
 
 	void MakeJump();
 
-	void StartFire();
-	void StopFire();
-
 	void ReloadStart();
 	void ReloadFinished();
 
@@ -77,4 +74,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Fire")
+		void StartFire();
+	UFUNCTION(BlueprintCallable, Category = "Fire")
+		void StopFire();
 };

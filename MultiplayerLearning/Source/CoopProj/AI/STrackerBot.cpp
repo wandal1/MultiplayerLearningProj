@@ -66,13 +66,46 @@ void ASTrackerBot::TakeDamageHandle(class USHealthComponent* OtherHealthComp, fl
 
 FVector ASTrackerBot::GetNextPathPoint()
 {
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	APawn* PlayerPawn = nullptr;
+	float NearestDistance = FLT_MAX;
 
-	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
-
-	if (NavPath && NavPath->PathPoints.Num() > 1)
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		return NavPath->PathPoints[1];
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn())
+		{
+			APawn* MyPawn = PC->GetPawn();
+			if (USHealthComponent::IsFriendly(MyPawn, this))
+			{
+				continue;
+			}
+
+			USHealthComponent* MyPawnHealthComp = Cast<USHealthComponent>(MyPawn->GetComponentByClass(USHealthComponent::StaticClass()));
+
+			if (ensure(HealthComp) && MyPawnHealthComp->IsAlive())
+			{
+				float Distance = (MyPawn->GetActorLocation() - GetActorLocation()).Size();
+
+				if (Distance < NearestDistance)
+				{
+					PlayerPawn = MyPawn;
+					NearestDistance = Distance;
+				}
+			}
+		}
+	}
+
+	if (PlayerPawn)
+	{
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
+
+		GetWorldTimerManager().ClearTimer(RefreshPath_TH);
+		GetWorldTimerManager().SetTimer(RefreshPath_TH, this, &ASTrackerBot::RefreshPath, 5, false);
+
+		if (NavPath && NavPath->PathPoints.Num() > 1)
+		{
+			return NavPath->PathPoints[1];
+		}
 	}
 
 	return GetActorLocation();
@@ -114,6 +147,11 @@ void ASTrackerBot::SelfDamage()
 	}
 }
 
+void ASTrackerBot::RefreshPath()
+{
+	NextPathPoint = GetNextPathPoint();
+}
+
 void ASTrackerBot::TryFindBotsNear()
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -147,11 +185,16 @@ void ASTrackerBot::Tick(float DeltaTime)
 		return;
 
 	FVector ForceDirection;
+
+	RefreshPath();
+
 	if (NextPathPoint.Size() > StopDistance) {
 		FVector NextTracePoint = NextPathPoint;
 		ForceDirection = NextPathPoint - GetActorLocation();
 		float DistanceToTarget = FVector::Distance(NextTracePoint, GetActorLocation());
-		if (DistanceToTarget > StopDistance) {
+
+		if (DistanceToTarget > StopDistance) 
+		{
 			ForceDirection -= GetVelocity();
 		}
 
@@ -189,9 +232,7 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
-
-	if (PlayerPawn && !GetWorldTimerManager().IsTimerActive(SelfDamage_TH) && !bExploded)
+	if (!USHealthComponent::IsFriendly(OtherActor, this) && !bExploded)
 	{
 
 		if (Role == ROLE_Authority)

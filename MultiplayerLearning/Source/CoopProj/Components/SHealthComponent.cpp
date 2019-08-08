@@ -43,6 +43,11 @@ void USHealthComponent::HandleAnyDamage(AActor* DamagedActor, float Damage, cons
 		return;
 	}
 
+	if (DamageCauser != DamagedActor && IsFriendly(DamageCauser, DamagedActor))
+	{
+		return;
+	}
+
 	CurrentHealth = FMath::Max<float>(CurrentHealth - Damage, 0);
 
 	if (CurrentHealth <= 0)
@@ -70,6 +75,11 @@ float USHealthComponent::GetHealth() const
 	return CurrentHealth;
 }
 
+float USHealthComponent::GetHealthPercentage() const
+{
+	return CurrentHealth / MaxHealth;
+}
+
 void USHealthComponent::Heal(float HealthAmount)
 {
 	if (HealthAmount <= 0 || CurrentHealth <= 0)
@@ -82,6 +92,26 @@ void USHealthComponent::Heal(float HealthAmount)
 	UE_LOG(LogTemp, Log, TEXT("Health Amount : %s"), *FString::SanitizeFloat(HealthAmount));
 
 	OnHealthChanged.Broadcast(this, CurrentHealth, -HealthAmount, nullptr, nullptr, nullptr);
+}
+
+bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+{
+	if (ActorA == nullptr || ActorB == nullptr)
+	{
+		//Assume Friendly
+		return true;
+	}
+
+	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::StaticClass()));
+	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::StaticClass()));
+
+	if (HealthCompA == nullptr || HealthCompB == nullptr)
+	{
+		//Assume Friendly
+		return true;
+	}
+
+	return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
